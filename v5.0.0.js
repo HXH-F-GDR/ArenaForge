@@ -506,7 +506,9 @@ function topicScelto(){
 /* ------------------------------------------------------------
    Riconoscimento dell'NPC dal titolo del topic.
    È solo una preselezione: scatta se nel titolo compare il nome
-   esatto di UN solo NPC (maiuscole e accenti non contano).
+   completo di UN solo NPC, oppure solo il nome o solo il cognome
+   (es. "Tizio VS. Starius"), purché quella parola non appartenga
+   a più NPC. Maiuscole, accenti e punteggiatura non contano.
    Con un errore di battitura non riconosce nulla e il menu resta
    com'è; in ogni caso l'NPC si può sempre cambiare a mano, e il
    nome finisce nel popup di conferma.
@@ -518,10 +520,25 @@ function riconosciNpc(){
   if (!topic || !Object.keys(NPCS).length){ box.textContent = ""; return; }
 
   const titolo = "_" + slug(topic.titolo) + "_";
-  const match = Object.keys(NPCS).filter(k => {
+  const contiene = p => titolo.includes("_" + p + "_");
+
+  /* parole dei nomi (almeno 3 lettere) e quanti NPC le usano:
+     vale solo una parola che appartiene a un NPC soltanto */
+  const quanti = {};
+  const parole = {};
+  for (const k of Object.keys(NPCS)){
+    parole[k] = [...new Set(slug(NPCS[k].nome).split("_").filter(p => p.length >= 3))];
+    for (const p of parole[k]) quanti[p] = (quanti[p] || 0) + 1;
+  }
+
+  /* prima il nome completo; se non c'è, nome o cognome da soli */
+  let match = Object.keys(NPCS).filter(k => {
     const s = slug(NPCS[k].nome);
-    return s && titolo.includes("_" + s + "_");
+    return s && contiene(s);
   });
+  if (!match.length)
+    match = Object.keys(NPCS).filter(k =>
+      parole[k].some(p => quanti[p] === 1 && contiene(p)));
 
   if (match.length === 1){
     const k = match[0];
