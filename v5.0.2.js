@@ -627,17 +627,17 @@ function mostraStatoPost(fase){
   const titolo = esc(POST.topic.titolo);
 
   if (fase === "invio"){
-    box.className = "af-poststato on info";
-    box.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Pubblico il post in <b>' + titolo + '</b>…';
+    box.className = "af-poststato on";
+    box.innerHTML = '<span><i class="fa-solid fa-circle-notch fa-spin"></i> Pubblico il post in <b>' + titolo + '</b>…</span>';
     return;
   }
 
   if (fase === "ok"){
     box.className = "af-poststato on ok";
     box.innerHTML =
-      '<div><i class="fa-solid fa-circle-check"></i> Post pubblicato in <b>' + titolo + '</b>.</div>' +
-      '<div class="af-btnrow"><button class="af-btn sm primary" data-post="vai">' +
-      '<i class="fa-solid fa-arrow-right"></i> Vai al post</button></div>';
+      '<span><i class="fa-solid fa-circle-check"></i> Post pubblicato in <b>' + titolo + '</b>.</span>' +
+      '<span class="af-btnrow"><button class="af-btn sm primary" data-post="vai">' +
+      '<i class="fa-solid fa-arrow-right"></i> Vai al post</button></span>';
     return;
   }
 
@@ -645,18 +645,18 @@ function mostraStatoPost(fase){
   const certo = POST.motivo === "modulo";
   box.className = "af-poststato on err";
   box.innerHTML =
-    '<div><i class="fa-solid fa-triangle-exclamation"></i> ' +
+    '<span><i class="fa-solid fa-triangle-exclamation"></i> ' +
     (certo
       ? "Non riesco a rispondere in <b>" + titolo + "</b>: il topic è chiuso oppure non hai i permessi per scriverci. " +
         "Il post non è partito; il lancio resta nello storico. Avvisa lo staff."
       : "Il post in <b>" + titolo + "</b> potrebbe non essere partito. Controlla il topic prima di riprovare: " +
         "se il post c'è già, <b>non</b> riprovare. Se manca, usa “Riprova a postare” (stesso tiro) " +
         "oppure copia il testo qui sotto e postalo a mano.") +
-    '</div>' +
-    '<div class="af-btnrow">' +
+    '</span>' +
+    '<span class="af-btnrow">' +
       (certo ? "" : '<button class="af-btn sm primary" data-post="riprova"><i class="fa-solid fa-rotate-right"></i> Riprova a postare</button>') +
       '<button class="af-btn sm" data-post="apri"><i class="fa-solid fa-up-right-from-square"></i> Apri il topic</button>' +
-    '</div>';
+    '</span>';
 }
 
 async function riprovaInvio(){
@@ -823,31 +823,28 @@ function renderCard(){
   const box = $("afCard");
   if (!npc){ box.innerHTML = `<div class="af-empty">Nessun NPC selezionato.</div>`; return; }
 
-  const vita   = nInt($("afVita").value);
+  const vitaCampo = $("afVita").value.trim();
+  const vita   = vitaCampo === "" ? npc.vitaIniziale : nInt(vitaCampo);
   const perc   = npc.vitaIniziale ? Math.max(0, Math.min(100, vita / npc.vitaIniziale * 100)) : 0;
   const soglia = Math.floor(npc.vitaIniziale * SOGLIA_KO);
-  const ko     = vita > 0 && vita <= soglia;
+  const ko     = vita <= soglia;
 
   box.innerHTML = `
-    <div class="af-npccard">
+    <div class="af-npc">
       <div class="af-npcimg" style="background-image:url('${escUrl(npc.miniatura)}')"></div>
       <div class="af-npcinfo">
-        <div class="af-npcname">
-          <span class="af-npcfloor">Piano ${esc(npc.pianoArenaCeleste)}</span>
-          ${esc(npc.nome)}
-        </div>
+        <div class="af-npcname">${esc(npc.nome)}<small>Piano ${esc(npc.pianoArenaCeleste)}</small></div>
         <div class="af-stats">
-          <div class="af-stat"><span class="k">Vita max</span><span class="v">${esc(npc.vitaIniziale)}</span></div>
-          <div class="af-stat"><span class="k">Destrezza</span><span class="v">${esc(npc.destrezza)}</span></div>
-          <div class="af-stat"><span class="k">Velocità</span><span class="v">${esc(npc.velocita)}</span></div>
-          <div class="af-stat"><span class="k">Riflessi</span><span class="v">${esc(npc.riflessi)}</span></div>
+          <span>Vita<b>${esc(npc.vitaIniziale)}</b></span>
+          <span>Destrezza<b>${esc(npc.destrezza)}</b></span>
+          <span>Velocità<b>${esc(npc.velocita)}</b></span>
+          <span>Riflessi<b>${esc(npc.riflessi)}</b></span>
         </div>
-        ${vita > 0 ? `
-          <div class="af-hpbar"><i class="${ko?'low':''}" style="width:${perc}%"></i></div>
-          <div class="af-hplabel">
-            <span>${vita} / ${npc.vitaIniziale}</span>
-            <span class="${ko?'ko':''}">${ko ? '<i class="fa-solid fa-skull"></i> sotto la soglia di KO' : 'Soglia KO: ≤ '+soglia}</span>
-          </div>` : ``}
+        <div class="af-hpbar"><i class="${ko?'low':''}" style="width:${perc}%"></i></div>
+        <div class="af-hplabel">
+          <span>${vita} / ${npc.vitaIniziale}</span>
+          <span class="${ko?'ko':''}">${ko ? '<i class="fa-solid fa-skull"></i> sotto la soglia di KO' : 'Soglia KO ≤ ' + soglia}</span>
+        </div>
       </div>
     </div>`;
 }
@@ -864,17 +861,11 @@ function renderMoves(){
 
   dif.innerHTML = npc.movesetDifensivo.map((m,i)=>{
     const s = isSchivata(m,i);
-    return `<div class="af-move ${selDif===i?'on':''}">
-      <span class="n">${i+1}</span>
-      <span class="val ${s?'dodge':''}">${s ? 'schivata' : 'R '+m.valore}</span>
-    </div>`;
+    return `<div class="af-move ${selDif===i?'on':''}" title="Mossa ${i+1}">${s ? 'schiv.' : 'R ' + esc(m.valore)}</div>`;
   }).join("");
 
   att.innerHTML = npc.movesetOffensivo.map((m,i)=>
-    `<div class="af-move ${selAtt===i?'on':''}">
-      <span class="n">${i+1}</span>
-      <span class="val">F ${m.valore}</span>
-    </div>`).join("");
+    `<div class="af-move ${selAtt===i?'on':''}" title="Mossa ${i+1}">F ${esc(m.valore)}</div>`).join("");
 
   if (selDif !== null){
     const m = npc.movesetDifensivo[selDif];
@@ -889,55 +880,26 @@ function renderMoves(){
 
 function renderDadi(){
   const box = $("afDiceOut");
-  if (!TIRO){ box.classList.remove("on"); box.innerHTML = ""; return; }
+  if (!TIRO){
+    $("afDadiDif").textContent = "in attesa dei dadi";
+    $("afDadiAtt").textContent = "in attesa dei dadi";
+    box.innerHTML = "";
+    return;
+  }
 
-  const dado = "d" + TIRO.facce;
+  const det = (raw) => TIRO.malus > 0 ? " (" + raw + " − " + TIRO.malus + ")" : "";
+  $("afDadiDif").innerHTML = "mossa <b>" + (TIRO.idxDif + 1) + "</b> · tenacia <b>" + TIRO.tenDif + "</b>" + det(TIRO.rawDif);
+  $("afDadiAtt").innerHTML = "mossa <b>" + (TIRO.idxAtt + 1) + "</b> · tenacia <b>" + TIRO.tenAtt + "</b>" + det(TIRO.rawAtt);
 
-  box.innerHTML = `
-    <div class="af-dicegrid">
-      <div class="af-die">
-        <span class="k">Mossa difensiva</span>
-        <span class="v">${TIRO.idxDif + 1}</span>
-        <span class="s">di ${TIRO.nDif}</span>
-      </div>
-      <div class="af-die">
-        <span class="k">Mossa offensiva</span>
-        <span class="v">${TIRO.idxAtt + 1}</span>
-        <span class="s">di ${TIRO.nAtt}</span>
-      </div>
-      <div class="af-die">
-        <span class="k">Tenacia difesa</span>
-        <span class="v">${TIRO.tenDif}</span>
-        <span class="s">${TIRO.malus > 0 ? TIRO.rawDif + "−" + TIRO.malus : dado}</span>
-      </div>
-      <div class="af-die">
-        <span class="k">Tenacia attacco</span>
-        <span class="v">${TIRO.tenAtt}</span>
-        <span class="s">${TIRO.malus > 0 ? TIRO.rawAtt + "−" + TIRO.malus : dado}</span>
-      </div>
-    </div>
-    <div class="af-dicesum">
-      <span>${esc(TIRO.npc)} &nbsp;·&nbsp; Tenacia con <b>${dado}</b>${TIRO.malus > 0
-        ? ' &nbsp;·&nbsp; <b>−' + TIRO.malus + '</b> Fortuna (' + TIRO.fortuna + ')'
-        : ''}</span>
-      <span class="rerolls">ID ${esc(TIRO.id)} · ${dataOraEstesa(TIRO.ts)}</span>
-    </div>
-    <div class="af-locked">
-      <i class="fa-solid fa-lock"></i> Lancio registrato nello storico. Il verbale del tiro è nello spoiler del post.
-    </div>`;
-
-  box.classList.add("on");
-  box.style.animation = "none";
-  void box.offsetWidth;
-  box.style.animation = "";
+  box.innerHTML = '<i class="fa-solid fa-lock"></i> Tenacia d' + TIRO.facce +
+    (TIRO.malus > 0 ? " · Fortuna " + TIRO.fortuna + " (−" + TIRO.malus + ")" : "") +
+    " · registrato nello storico · ID <b>" + esc(TIRO.id) + "</b> · " + dataOraEstesa(TIRO.ts);
 }
 
 /* Azzera il lancio mostrato (cambio di NPC o di modalità). */
 function resetTiro(){
   TIRO = null;
   selDif = selAtt = null;
-  $("afTenDif").value = "";
-  $("afTenAtt").value = "";
   renderDadi();
   renderMoves();
 }
@@ -956,6 +918,7 @@ function aggiornaPulsante(){
 function modalitaKO(){
   const ko = $("afEsito").value === "vittoria_npc";
   $("afCombatBody").classList.toggle("af-dim", ko);
+  $("afOstRow").classList.toggle("af-dim", ko);
   $("afReazione").classList.toggle("af-dim", ko);
   aggiornaPulsante();
 }
@@ -974,12 +937,12 @@ function renderCalc(calc){
   const box = $("afCalc");
   if (!calc || !Object.keys(calc).length){ box.innerHTML = ""; return; }
   const c = [];
-  if (calc.esito)                c.push(`<div class="af-calcbox"><span class="k">Esito</span><span class="v" style="font-size:13px">${esc(calc.esito)}</span></div>`);
-  if (calc.difesa !== undefined) c.push(`<div class="af-calcbox def"><span class="k">Difesa NPC</span><span class="v">${esc(calc.difesa)}</span></div>`);
-  if (calc.danno  !== undefined) c.push(`<div class="af-calcbox dmg"><span class="k">Danno subito</span><span class="v">${esc(calc.danno)}</span></div>`);
-  if (calc.vita   !== undefined) c.push(`<div class="af-calcbox hp"><span class="k">Vita residua</span><span class="v">${esc(calc.vita)}</span></div>`);
-  if (calc.attacco!== undefined) c.push(`<div class="af-calcbox atk"><span class="k">Attacco NPC</span><span class="v">${esc(calc.attacco)}</span></div>`);
-  if (calc.velNPC !== undefined) c.push(`<div class="af-calcbox"><span class="k">Velocità NPC</span><span class="v">${esc(calc.velNPC)}</span></div>`);
+  if (calc.esito)                c.push(`<span>Esito<b>${esc(calc.esito)}</b></span>`);
+  if (calc.difesa !== undefined) c.push(`<span>Difesa NPC<b>${esc(calc.difesa)}</b></span>`);
+  if (calc.danno  !== undefined) c.push(`<span class="dn">Danno subito<b>${esc(calc.danno)}</b></span>`);
+  if (calc.vita   !== undefined) c.push(`<span>Vita residua<b>${esc(calc.vita)}</b></span>`);
+  if (calc.attacco!== undefined) c.push(`<span>Attacco NPC<b>${esc(calc.attacco)}</b></span>`);
+  if (calc.velNPC !== undefined) c.push(`<span>Velocità NPC<b>${esc(calc.velNPC)}</b></span>`);
   box.innerHTML = c.join("");
 }
 
@@ -1078,8 +1041,6 @@ async function tiraEPosta(){
     TIRO   = tiro;
     selDif = tiro.idxDif;
     selAtt = tiro.idxAtt;
-    $("afTenDif").value = tiro.tenDif;
-    $("afTenAtt").value = tiro.tenAtt;
     renderDadi();
     renderMoves();
 
@@ -1223,10 +1184,10 @@ function renderStorico(){
   const gestiti   = tot - daGestire;
 
   $("afLogCount").innerHTML =
-    '<span style="font-family:\'Alegreya Sans SC\',sans-serif;font-size:12px;color:#CFF09E;font-weight:600">' +
+    '<span class="af-count">' +
     tot + (tot === 1 ? " lancio" : " lanci") + '</span>' +
     (IS_STAFF && gestiti > 0
-      ? ' <button class="af-btn sm danger" id="afLogPurge" style="margin-left:8px">' +
+      ? ' <button class="af-btn sm danger" id="afLogPurge">' +
         '<i class="fa-solid fa-broom"></i> Elimina ' + gestiti + ' gestit' +
         (gestiti === 1 ? "a" : "e") + '</button>'
       : "");
@@ -1234,7 +1195,7 @@ function renderStorico(){
   const st = $("afLogStat");
   if (daGestire > 0){
     st.className = "af-logstat todo";
-    st.innerHTML = '<i class="fa-solid fa-circle" style="font-size:7px"></i> ' + daGestire + " da gestire";
+    st.innerHTML = '<i class="fa-solid fa-circle dot"></i> ' + daGestire + " da gestire";
   } else {
     st.className = "af-logstat done";
     st.innerHTML = '<i class="fa-solid fa-circle-check"></i> Tutto gestito';
@@ -1284,10 +1245,10 @@ function renderStorico(){
             <span class="af-logchip">Att <b>${(r.idxAtt ?? 0) + 1}</b></span>
             <span class="af-logchip">Ten.dif <b>${r.tenDif}</b></span>
             <span class="af-logchip">Ten.att <b>${r.tenAtt}</b></span>
-            ${r.malus > 0 ? `<span class="af-logchip" style="border-color:#8E7A3A;background:#3A2F19;color:#E0C05A">Fortuna ${r.fortuna} <b>−${r.malus}</b></span>` : ""}
+            ${r.malus > 0 ? `<span class="af-logchip fort">Fortuna ${r.fortuna} <b>−${r.malus}</b></span>` : ""}
             <span class="af-logchip">${dado}</span>
           </div>
-          <div class="af-logdice" style="margin-top:6px">
+          <div class="af-logdice">
             ${tagStato(r)}
             ${topicChip}
             ${r.tentativiInvio > 1
@@ -1378,38 +1339,35 @@ function renderRoster(){
   $("afRosterCount").textContent = Object.keys(NPCS).length + " NPC";
 
   $("afRosterList").innerHTML = list.length ? list.map(([k,n]) => `
-    <div class="af-npcrow" data-k="${esc(k)}" style="cursor:pointer">
+    <div class="af-npcrow" data-k="${esc(k)}">
       <div class="thumb" style="background-image:url('${escUrl(n.miniatura)}')"></div>
       <div class="meta">
         <div class="nm">${esc(n.nome)}</div>
-        <div class="st">PIANO ${esc(n.pianoArenaCeleste)} · HP ${esc(n.vitaIniziale)} · D${esc(n.destrezza)} V${esc(n.velocita)} R${esc(n.riflessi)}</div>
+        <div class="st">Piano ${esc(n.pianoArenaCeleste)} · Vita ${esc(n.vitaIniziale)} · D${esc(n.destrezza)} V${esc(n.velocita)} R${esc(n.riflessi)}</div>
       </div>
     </div>`).join("")
-    : `<div class="af-empty" style="grid-column:1/-1">Nessun NPC trovato.</div>`;
+    : `<div class="af-empty">Nessun NPC trovato.</div>`;
 }
 
 function renderRosterDetail(key){
   const n = NPCS[key];
+  document.querySelectorAll("#af-root .af-npcrow").forEach(r => r.classList.toggle("on", r.dataset.k === key));
   if (!n){ $("afRosterDetail").innerHTML = ""; return; }
   const mv = (arr, tipo) => arr.map((m,i)=>{
     const s = tipo==="dif" && isSchivata(m,i);
     const dsc = s ? parseSchivata(m.descrizione).ok : m.descrizione;
-    return `<div class="af-desc">
-      <span style="font-family:Calistoga,Georgia,serif;font-size:16px;color:#292354;flex:0 0 52px;text-align:center;background:#CFF09E;border-radius:4px;padding:6px 2px;line-height:1.2">
-        ${i+1}${s ? ' <i class="fa-solid fa-wind"></i>' : ""}<br><span style="font-family:'Alegreya Sans SC',sans-serif;color:#0B486B;font-size:10px;font-weight:600;letter-spacing:.04em">${s?"SCHIVATA":(tipo==="dif"?"R "+m.valore:"F "+m.valore)}</span>
-      </span>
-      <p>${esc(dsc)}</p>
-    </div>`;
+    const val = s ? "schivata" : (tipo==="dif" ? "R " : "F ") + esc(m.valore);
+    return `<div class="af-desc"><span class="tag"><b>${i+1}</b>${val}</span><p>${esc(dsc)}</p></div>`;
   }).join("");
 
   $("afRosterDetail").innerHTML = `
-    <div class="af-sect">
-      <div class="af-sect-h"><span>${esc(n.nome)} — moveset difensivo</span></div>
-      <div class="af-sect-b">${mv(n.movesetDifensivo,"dif")}</div>
+    <div class="af-blk">
+      <div class="af-lbl"><span><i class="fa-solid fa-shield-halved"></i>${esc(n.nome)} — difesa</span></div>
+      ${mv(n.movesetDifensivo,"dif")}
     </div>
-    <div class="af-sect">
-      <div class="af-sect-h"><span>${esc(n.nome)} — moveset offensivo</span></div>
-      <div class="af-sect-b">${mv(n.movesetOffensivo,"att")}</div>
+    <div class="af-blk last">
+      <div class="af-lbl"><span><i class="fa-solid fa-burst"></i>${esc(n.nome)} — contrattacco</span></div>
+      ${mv(n.movesetOffensivo,"att")}
     </div>`;
   $("afRosterDetail").scrollIntoView({behavior:"smooth",block:"nearest"});
 }
