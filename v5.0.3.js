@@ -1,5 +1,5 @@
 /**
- * HxH GDR — ARENA CELESTE  v5.0.0
+ * HxH GDR — ARENA CELESTE  v5.0.3
  * Sistema semi-automatico di risoluzione incontri contro NPC.
  *
  * Novità della v5: i dadi si tirano e il turno dell'NPC viene postato
@@ -31,8 +31,12 @@ const FIREBASE_CONFIG = {
 const DB_ROOT  = "arena";          // nodo radice su Realtime Database
 const SOGLIA_KO = 0.05;            // NPC sconfitto sotto il 5% della vita iniziale
 
-/* Sezione dove si svolgono gli incontri */
-const SEZIONE_INCONTRI = 65114274;
+/* Sezione dove si svolgono gli incontri: una per forum */
+const SEZIONI_INCONTRI = {
+  "hxhforumgdr.forumcommunity.net":         9051469,   // GDR
+  "graficaxskinxelaborazione.forumfree.it": 65114274   // forum di prova
+};
+const SEZIONE_INCONTRI = SEZIONI_INCONTRI[location.hostname] || SEZIONI_INCONTRI["graficaxskinxelaborazione.forumfree.it"];
 const TOPIC_PER_RICHIESTA = 100;   // topic chiesti all'API per ogni pagina
 const MAX_PAGINE_API      = 20;
 
